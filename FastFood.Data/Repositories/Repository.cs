@@ -10,6 +10,7 @@ namespace FastFood.Data.Repositories
     public class Repository<TResult> : IRepository<TResult> where TResult : Auditable
     {
         private string path;
+        private List<TResult> entities = new List<TResult>();
         public Repository()
         {
             if (typeof(TResult) == typeof(Product))
@@ -44,13 +45,19 @@ namespace FastFood.Data.Repositories
             value.CreatedAt = DateTime.UtcNow;
             model.Add(value);
             var jsonmodel = JsonConvert.SerializeObject(model);
-
-
+            File.WriteAllText(path, jsonmodel);
+            return value;
         }
 
-        public Task<bool> DeleteAsync(Predicate<TResult> predicate)
+        public async Task<bool> DeleteAsync(Predicate<TResult> predicate)
         {
-            throw new NotImplementedException();
+            TResult model = await GetAsync(x=> predicate(x));
+            if (model is null) return false;
+            entities.Remove(model);
+
+            string jsonmodel = JsonConvert.SerializeObject(model);
+            File.WriteAllText(path, jsonmodel);
+            return true;    
         }
 
         public async Task<List<TResult>> GetAllAsync()
@@ -66,14 +73,23 @@ namespace FastFood.Data.Repositories
             return model;
         }
 
-        public Task<TResult> GetAsync(Predicate<TResult> predicate)
+        public async Task<TResult> GetAsync(Predicate<TResult> predicate)
         {
-            throw new NotImplementedException();
+            var models = await GetAllAsync();
+            return models.FirstOrDefault(x => predicate(x));
         }
 
-        public Task<TResult> UpdateAsync(TResult value)
+        public async Task<TResult> UpdateAsync(TResult value)
         {
-            throw new NotImplementedException();
+            TResult result= await GetAsync(x=>x.Id==value.Id);
+            result.UpdatedAt = DateTime.UtcNow;
+            int index = entities.IndexOf(result);
+            entities.RemoveAt(index);
+            entities.Insert(index, value);
+
+            File.WriteAllText(path, JsonConvert.SerializeObject(entities));
+            return value;
+
         }
     }
 }
