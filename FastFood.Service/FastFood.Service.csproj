@@ -8,10 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Services\" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <ProjectReference Include="..\FastFood.Data\FastFood.Data.csproj" />
     <ProjectReference Include="..\FastFood.Domain\FastFood.Domain.csproj" />
   </ItemGroup>
 
